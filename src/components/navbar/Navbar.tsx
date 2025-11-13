@@ -9,8 +9,13 @@ function Navbar() {
   return (
     <nav className="bg-slate-900 flex items-center py-3 justify-between px-24 text-white">
       <Link href="/">
-        <h1>Ecommerce</h1>
+      <img src="/icon-gt.png" alt="GT AutoMarket" width="100px"/>
       </Link>
+      <Link href="/">
+        <h1>GT AutoMarket</h1>
+        <p>Concesionario Oficial</p>
+      </Link>
+       <Link href="/login" className="bg-sky-400 px-3 py-2 rounded">Log In</Link>
 
       {session?.user ? (
         <div className="flex gap-x-2 items-center">
