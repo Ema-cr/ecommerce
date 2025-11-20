@@ -4,14 +4,24 @@ import Link from "next/link";
 
 const Login = () => {
   return (
-    <>
-      <div className="flex flex-col gap-6 p-7 md:flex-row md:gap-8 rounded-2xl">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-linear-to-l from-[#0d1f4a] via-[#0e2a67] to-[#0a1b3c] px-4">
+      
+
+      <div className="flex flex-col items-center ">
         <Link href="/">
-          <img src="/icon-gt.png" alt="GT AutoMarket" width="300px"/>
+          <img
+            src="/icon-gt.png"
+            alt="GT AutoMarket"
+            className="w-24 md:w-60"
+          />
         </Link>
       </div>
-      <div>Login</div>
-    </>
+
+
+      <p className="text-white/60 text-sm mt-6">
+        © 2025 GT AutoMarket. Todos los derechos reservados.
+      </p>
+    </div>
   );
 };
 
