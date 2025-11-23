@@ -53,7 +53,7 @@ function Navbar() {
               </Link>
 
               <img
-                src={session.user.image}
+                src={session.user.image ?? ""}
                 alt="user"
                 className="w-9 h-9 rounded-full cursor-pointer border border-white/20"
                 onClick={() => setDropdownOpen(!dropdownOpen)}
