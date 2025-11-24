@@ -3,7 +3,22 @@
 import { useState } from "react";
 
 export default function CreateCarPage() {
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{
+    brand: string;
+    model: string;
+    year: string;
+    price: string;
+    currency: string;
+    engineType: string;
+    engineFuel: string;
+    engineHp: string;
+    engineTransmission: string;
+    mileage: string;
+    condition: string;
+    imageFile: File | null;
+    status: string;
+    tags: string;
+  }>({
     brand: "",
     model: "",
     year: "",
@@ -16,7 +31,6 @@ export default function CreateCarPage() {
     mileage: "",
     condition: "Used",
     imageFile: null,
-    dealerId: "",
     status: "Available",
     tags: ""
   });
@@ -36,18 +50,14 @@ export default function CreateCarPage() {
     if (!form.imageFile) return "";
     const data = new FormData();
     data.append("file", form.imageFile);
-    data.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || ""); // Use env variable
 
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "";
-    const url = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
-
-    const res = await fetch(url, {
+    const res = await fetch("/api/upload", {
       method: "POST",
       body: data,
     });
 
     const json = await res.json();
-    return json.secure_url || "";
+    return json.url || "";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -78,7 +88,6 @@ export default function CreateCarPage() {
       mileage: parseInt(form.mileage),
       condition: form.condition,
       imageUrl: uploadedImageUrl,
-      dealerId: form.dealerId,
       status: form.status,
       tags: form.tags.split(",").map(tag => tag.trim()).filter(tag => tag.length > 0),
     };
@@ -97,16 +106,15 @@ export default function CreateCarPage() {
           model: "",
           year: "",
           price: "",
-          currency: "USD",
+          currency: "",
           engineType: "",
           engineFuel: "",
           engineHp: "",
           engineTransmission: "",
           mileage: "",
-          condition: "Used",
+          condition: "",
           imageFile: null,
-          dealerId: "",
-          status: "Available",
+          status: "",
           tags: ""
         });
         setImageUrl("");
@@ -268,17 +276,6 @@ export default function CreateCarPage() {
           {imageUrl && (
             <img src={imageUrl} alt="Uploaded" className="mt-2 max-h-48" />
           )}
-        </div>
-
-        <div>
-          <label className="block font-medium">Dealer ID</label>
-          <input
-            type="text"
-            name="dealerId"
-            value={form.dealerId}
-            onChange={handleChange}
-            className="w-full p-2 border rounded"
-          />
         </div>
 
         <div>
