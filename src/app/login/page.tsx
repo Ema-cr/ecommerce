@@ -1,28 +1,21 @@
-import React from "react";
-import RegisterForm from "@/components/registerform/RegisterForm";
 import Link from "next/link";
+import LoginForm from "@/components/loginform/LoginForm";
 
-const Login = () => {
+export default function LoginPage() {
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-linear-to-l from-[#0d1f4a] via-[#0e2a67] to-[#0a1b3c] px-4">
-      
+    <div className="min-h-screen flex flex-col items-center justify-center 
+      bg-gradient-to-l from-[#0d1f4a] via-[#0e2a67] to-[#0a1b3c] px-4 pb-16">
 
-      <div className="flex flex-col items-center ">
+      <div className="flex flex-col items-center mb-8">
         <Link href="/">
-          <img
-            src="/icon-gt.png"
-            alt="GT AutoMarket"
-            className="w-24 md:w-60"
-          />
+          <img src="/icon-gt.png" className="w-50 h-50 mb-1 cursor-pointer" />
         </Link>
+        <h1 className="text-white text-3xl font-semibold">GT AutoMarket</h1>
+        <p className="text-white/80 text-sm">Tu concesionario de confianza</p>
       </div>
 
-
-      <p className="text-white/60 text-sm mt-6">
-        © 2025 GT AutoMarket. Todos los derechos reservados.
-      </p>
+      <LoginForm />
     </div>
   );
-};
+}
 
-export default Login;
