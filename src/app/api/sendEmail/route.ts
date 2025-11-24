@@ -20,15 +20,15 @@ export async function POST(req: Request) {
     const mensajeHtml = createEmailTemplate();
 
     await transporter.sendMail({
-      from: `"Frozono App" <${userMail}>`,
-      to: email, // 👈 Se recibe desde el form
-      subject: "❄️ Bienvenido a Frozono App",
+      from: `"GT Auto Market" <${userMail}>`,
+      to: email, 
+      subject: "🚗 Bienvenido a GT Auto Market",
       html: mensajeHtml,
       attachments: [
         {
-          filename: "frozono.png",
-          path: "public/frozono.png", // 👈 Imagen local
-          cid: "frozono-logo", // 👈 Debe coincidir con el HTML
+          filename: "icon-gt.png",
+          path: "public/icon-gt.png", 
+          cid: "icon-gt", 
         },
       ],
     });

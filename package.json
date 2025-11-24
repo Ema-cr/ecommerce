@@ -12,17 +12,22 @@
     "test:cov": "jest --coverage"
   },
   "dependencies": {
+    "@auth/mongodb-adapter": "^3.11.1",
+    "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.2.2",
     "axios": "^1.13.2",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
     "cloudinary": "^2.8.0",
     "dotenv": "^17.2.3",
-    "mongoose": "^8.19.4",
+    "mongoose": "^8.20.1",
     "next-auth": "^4.24.13",
     "next-cloudinary": "^6.17.4",
     "nodemailer": "^7.0.10",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.66.0",
+    "react-toastify": "^11.0.5",
     "yup": "^1.7.1"
   },
   "devDependencies": {
@@ -31,6 +36,8 @@
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
     "@types/axios": "^0.9.36",
+    "@types/bcrypt": "^6.0.0",
+    "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^30.0.0",
     "@types/mongoose": "^5.11.96",
     "@types/node": "^20.19.25",

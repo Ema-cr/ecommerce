@@ -1,20 +1,19 @@
 import mongoose from "mongoose";
 
-const dbConnect = async () => {
-  if (mongoose.connection.readyState >= 1) {
-    return;
-  }
+const MONGODB_URI = process.env.MONGODB_URI as string;
 
+if (!MONGODB_URI) {
+  throw new Error("❌ MONGODB_URI no está definida en el archivo .env");
+}
+
+export const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI!, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+    if (mongoose.connection.readyState === 1) return mongoose.connection;
+
+    return await mongoose.connect(MONGODB_URI, {
+      dbName: "gt_automarket",
     });
-    console.log("MongoDB connected");
   } catch (error) {
-    console.error("MongoDB connection error", error);
-    process.exit(1);
+    console.error("Error conectando MongoDB:", error);
   }
 };
-
-export default dbConnect;
