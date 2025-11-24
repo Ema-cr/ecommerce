@@ -18,7 +18,6 @@ const carSchema = new mongoose.Schema(
     mileage: { type: Number, default: 0 },
     condition: { type: String, enum: ["New", "Used"], default: "Used" },
     imageUrl: { type: String, required: true },
-    dealerId: { type: String, default: "" },
     status: { type: String, enum: ["Available", "Sold", "Reserved"], default: "Available" },
     tags: { type: [String], default: [] },
     createdAt: { type: Date, default: Date.now },
