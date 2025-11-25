@@ -1,8 +1,31 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast, ToastContainer } from "react-toastify";
+// Removed import of react-toastify CSS to prevent TypeScript error
+// import "react-toastify/dist/ReactToastify.css";
 
 export default function CreateCarPage() {
+  const router = useRouter();
+
+  const initialFormState = {
+    brand: "",
+    model: "",
+    year: "",
+    price: "",
+    currency: "USD",
+    engineType: "",
+    engineFuel: "",
+    engineHp: "",
+    engineTransmission: "",
+    km: "",
+    condition: "Used",
+    imageFile: null,
+    status: "Available",
+    tags: ""
+  };
+
   const [form, setForm] = useState<{
     brand: string;
     model: string;
@@ -13,27 +36,13 @@ export default function CreateCarPage() {
     engineFuel: string;
     engineHp: string;
     engineTransmission: string;
-    mileage: string;
+    km: string;
     condition: string;
     imageFile: File | null;
     status: string;
     tags: string;
-  }>({
-    brand: "",
-    model: "",
-    year: "",
-    price: "",
-    currency: "USD",
-    engineType: "",
-    engineFuel: "",
-    engineHp: "",
-    engineTransmission: "",
-    mileage: "",
-    condition: "Used",
-    imageFile: null,
-    status: "Available",
-    tags: ""
-  });
+  }>(initialFormState);
+
   const [imageUrl, setImageUrl] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -67,7 +76,7 @@ export default function CreateCarPage() {
     // Upload image to Cloudinary and get URL
     const uploadedImageUrl = await uploadImageToCloudinary();
     if (!uploadedImageUrl) {
-      alert("Image upload failed. Please try again.");
+      toast.error("Image upload failed. Please try again.");
       setLoading(false);
       return;
     }
@@ -85,7 +94,7 @@ export default function CreateCarPage() {
         hp: parseInt(form.engineHp),
         transmission: form.engineTransmission,
       },
-      mileage: parseInt(form.mileage),
+      km: parseInt(form.km),
       condition: form.condition,
       imageUrl: uploadedImageUrl,
       status: form.status,
@@ -100,29 +109,15 @@ export default function CreateCarPage() {
       });
 
       if (res.ok) {
-        alert("Car created successfully!");
-        setForm({
-          brand: "",
-          model: "",
-          year: "",
-          price: "",
-          currency: "",
-          engineType: "",
-          engineFuel: "",
-          engineHp: "",
-          engineTransmission: "",
-          mileage: "",
-          condition: "",
-          imageFile: null,
-          status: "",
-          tags: ""
-        });
+        toast.success("Car created successfully!");
+        setForm(initialFormState);
         setImageUrl("");
+        router.refresh();
       } else {
-        alert("Error creating car. Please try again.");
+        toast.error("Error creating car. Please try again.");
       }
     } catch (error) {
-      alert("Error creating car. Please try again.");
+      toast.error("Error creating car. Please try again.");
     }
 
     setLoading(false);
@@ -130,6 +125,7 @@ export default function CreateCarPage() {
 
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-xl shadow-md">
+      <ToastContainer />
       <h1 className="text-2xl font-bold mb-6">Create a New Car</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -239,11 +235,11 @@ export default function CreateCarPage() {
         </fieldset>
 
         <div>
-          <label className="block font-medium">Mileage</label>
+          <label className="block font-medium">KM</label>
           <input
             type="number"
-            name="mileage"
-            value={form.mileage}
+            name="km"
+            value={form.km}
             onChange={handleChange}
             required
             className="w-full p-2 border rounded"
