@@ -15,7 +15,7 @@ const carSchema = new mongoose.Schema(
     price: { type: Number, required: true },
     currency: { type: String, default: "USD" },
     engine: { type: engineSchema, required: true },
-    mileage: { type: Number, default: 0 },
+    km: { type: Number, default: 0 },
     condition: { type: String, enum: ["New", "Used"], default: "Used" },
     imageUrl: { type: String, required: true },
     status: { type: String, enum: ["Available", "Sold", "Reserved"], default: "Available" },
