@@ -1,6 +1,6 @@
 export default function Footer() {
   return (
-    <footer className="bg-gradient-to-l from-[#0d1f4a] via-[#0e2a67] to-[#0a1b3c] text-white pt-12 pb-6 mt-20 border-t border-white/10">
+    <footer className="bg-gradient-to-l from-[#0d1f4a] via-[#0e2a67] to-[#0a1b3c] text-white pt-12 pb-6 mt- border-t border-white/10">
       
       {/* CONTENEDOR */}
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-10">

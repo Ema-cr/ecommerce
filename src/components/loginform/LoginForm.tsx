@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { EnvelopeIcon, LockClosedIcon } from "@heroicons/react/24/outline";
-import InputWithIcon from "@/components/inputwithicon/InputWithIcon";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
