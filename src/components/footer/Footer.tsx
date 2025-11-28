@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Footer() {
   return (
     <footer className="bg-gradient-to-l from-[#0d1f4a] via-[#0e2a67] to-[#0a1b3c] text-white pt-12 pb-6 mt- border-t border-white/10">
@@ -21,10 +23,13 @@ export default function Footer() {
         <div>
           <h3 className="font-semibold text-lg mb-3">Enlaces</h3>
           <ul className="space-y-2 text-gray-300">
-            <li className="hover:text-white cursor-pointer">Inicio</li>
-            <li className="hover:text-white cursor-pointer">Vehículos</li>
-            <li className="hover:text-white cursor-pointer">Servicios</li>
-            <li className="hover:text-white cursor-pointer">Financiación</li>
+            <Link href="/">
+              <li className="hover:text-white cursor-pointer">Inicio</li>
+            </Link>
+            <ul className="space-y-2 text-gray-300"></ul>
+            <Link href="/cars">
+              <li className="hover:text-white cursor-pointer">Vehículos</li>
+            </Link>
           </ul>
         </div>
 
@@ -34,8 +39,6 @@ export default function Footer() {
           <ul className="space-y-2 text-gray-300">
             <li className="hover:text-white cursor-pointer">Contacto</li>
             <li className="hover:text-white cursor-pointer">Preguntas frecuentes</li>
-            <li className="hover:text-white cursor-pointer">Política de privacidad</li>
-            <li className="hover:text-white cursor-pointer">Términos y condiciones</li>
           </ul>
         </div>
 

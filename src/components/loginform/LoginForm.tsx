@@ -2,21 +2,41 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { EnvelopeIcon, LockClosedIcon } from "@heroicons/react/24/outline";
+import { toast } from 'react-toastify'
+import { useRouter } from 'next/navigation'
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await signIn("credentials", {
-      email,
-      password,
-      redirect: true,
-      callbackUrl: "/",
-      remember: remember ? "yes" : "no",
-    });
+    try {
+      const res = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+        remember: remember ? "yes" : "no",
+      });
+
+      // res may be undefined in some cases
+      if (!res) {
+        toast.error('Error en la autenticación')
+        return
+      }
+
+      if (res.error) {
+        toast.error(res.error)
+      } else {
+        toast.success('Autenticado correctamente')
+        // redirect to home
+        router.push('/')
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Error inesperado')
+    }
   };
 
   return (
@@ -88,7 +108,7 @@ export default function LoginForm() {
 
       <button
         type="button"
-        onClick={() => signIn("google")}
+        onClick={() => signIn("google", { callbackUrl: '/' })}
         className="flex items-center justify-center gap-2 w-full border py-3 rounded-xl hover:bg-gray-100"
       >
         <img src="/google_icon.png" className="w-5 h-5" alt="Google" />

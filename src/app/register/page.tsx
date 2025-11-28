@@ -3,7 +3,7 @@ import RegisterForm from '@/components/registerform/RegisterForm';
 
 export default function RegisterPage() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center 
+    <div className="screen flex flex-col 
       bg-gradient-to-l from-[#0d1f4a] via-[#0e2a67] to-[#0a1b3c] px-4 pb-16">
 
       <div className="flex flex-col items-center mb-8">

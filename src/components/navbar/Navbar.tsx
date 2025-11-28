@@ -2,11 +2,23 @@
 import Link from "next/link";
 import { signIn, useSession, signOut } from "next-auth/react";
 import { useState } from "react";
+import { useRouter } from 'next/navigation'
 
 function Navbar() {
   const { data: session } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [query, setQuery] = useState('')
+  const router = useRouter()
+
+  const doSearch = (q: string) => {
+    const encoded = encodeURIComponent(q.trim())
+    if (!encoded) {
+      router.push('/cars')
+    } else {
+      router.push(`/cars?q=${encoded}`)
+    }
+  }
 
   return (
     <nav
@@ -35,6 +47,9 @@ function Navbar() {
         <div className="hidden md:flex flex-1 justify-center px-10">
           <input
             type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') doSearch(query) }}
             placeholder="Buscar vehículos, marcas, modelos..."
             className="w-full max-w-md px-4 py-2 rounded-lg 
             bg-white/10 border border-white/20 text-white placeholder-gray-300
@@ -46,10 +61,10 @@ function Navbar() {
           {session?.user ? (
             <div className="flex items-center gap-3 relative">
               <Link
-                href="/dashboard"
+                href="/profile"
                 className="text-gray-200 hover:text-white"
               >
-                Dashboard
+                Perfil
               </Link>
 
               <img
@@ -114,6 +129,9 @@ function Navbar() {
         >
           <input
             type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') { doSearch(query); setMenuOpen(false) } }}
             placeholder="Buscar..."
             className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 
             text-gray-200 placeholder-gray-300 focus:outline-none"

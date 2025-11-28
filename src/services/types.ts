@@ -25,4 +25,7 @@ export interface IUser extends Document {
   email: string;
   password: string;
   createdAt: Date;
+  role?: 'admin' | 'user';
+  cart?: string[];
+  image?: string;
 }
