@@ -1,32 +1,51 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import Image from 'next/image'
+import { useState, useEffect, useCallback } from 'react'
 import { Car } from '@/services/types'
+import CarItem from './CarItem'
 
 export default function CarCard() {
   const [cars, setCars] = useState<Car[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  const itemsPerPage = 12
+  const [seed, setSeed] = useState<string | undefined>(undefined)
+
+  const fetchCars = useCallback(async () => {
+    try {
+      const randomParam = 'random=true'
+      const seedParam = seed ? `&seed=${encodeURIComponent(seed)}` : ''
+      const response = await fetch(`/api/cars?page=${currentPage}&limit=${itemsPerPage}&${randomParam}${seedParam}`, { cache: 'no-store' })
+      if (!response.ok) {
+        throw new Error('Failed to fetch cars')
+      }
+      const data = await response.json()
+      const items = data.items || data
+      setCars(items)
+      setTotal(data.total || 0)
+      // store seed returned by server so subsequent page requests use same permutation
+      if (!seed && data.seed) {
+        setSeed(String(data.seed))
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+    } finally {
+      setLoading(false)
+    }
+  }, [currentPage, seed, setTotal])
 
   useEffect(() => {
-    const fetchCars = async () => {
-      try {
-        const response = await fetch('/api/cars')
-        if (!response.ok) {
-          throw new Error('Failed to fetch cars')
-        }
-        const data = await response.json()
-        setCars(data.items || data)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred')
-      } finally {
-        setLoading(false)
-      }
-    }
-
+    setLoading(true)
     fetchCars()
-  }, [])
+    
+    // Refrescar cada 2 minutos para ver cambios en tiempo real
+    const interval = setInterval(fetchCars, 120000)
+    return () => clearInterval(interval)
+  }, [currentPage, fetchCars])
+
+  const totalPages = Math.ceil(total / itemsPerPage)
 
   if (loading) {
     return <div className="text-center py-10">Loading cars...</div>
@@ -41,90 +60,47 @@ export default function CarCard() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
-      {cars.map((car) => (
-        <div
-          key={car._id}
-          className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
-        >
+    <div className="p-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+        {cars.map((car) => (
+          <CarItem key={car._id} car={car} />
+        ))}
+      </div>
 
-          <div className="relative w-full h-48 bg-gray-200">
-            <Image
-              src={car.imageUrl}
-              alt={`${car.brand} ${car.model}`}
-              fill
-              className="object-cover"
-            />
-            {/* Status Badge */}
-            <div className="absolute top-3 right-3">
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-semibold text-white ${
-                  car.status === 'Available'
-                    ? 'bg-green-500'
-                    : car.status === 'Sold'
-                      ? 'bg-red-500'
-                      : 'bg-yellow-500'
-                }`}
-              >
-                {car.status}
-              </span>
-            </div>
-          </div>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-8">
+          <button
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-3 py-2 bg-gray-300 hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed rounded"
+          >
+            Previous
+          </button>
 
-          {/* Content */}
-          <div className="p-4">
-            {/* Brand and Model */}
-            <h2 className="text-xl font-bold text-gray-900 mb-1">
-              {car.brand} {car.model}
-            </h2>
-            <p className="text-sm text-gray-500 mb-3">
-              {car.year} • {car.condition}
-            </p>
-
-            {/* Details Grid */}
-            <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
-              <div className="flex items-center">
-                <span className="text-gray-600">🔧 {car.engine.type}</span>
-              </div>
-              <div className="flex items-center">
-                <span className="text-gray-600">⚡ {car.engine.hp} HP</span>
-              </div>
-              <div className="flex items-center">
-                <span className="text-gray-600">⛽ {car.engine.fuel}</span>
-              </div>
-              <div className="flex items-center">
-                <span className="text-gray-600">🔄 {car.engine.transmission}</span>
-              </div>
-              <div className="flex items-center">
-                <span className="text-gray-600">📍 {car.km} km</span>
-              </div>
-            </div>
-
-            {/* Tags */}
-            {car.tags && car.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mb-4">
-                {car.tags.map((tag, index) => (
-                  <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Price */}
-            <div className="border-t pt-3 mb-3">
-              <p className="text-2xl font-bold text-blue-600">
-                ${car.price.toLocaleString()} {car.currency}
-              </p>
-            </div>
-
-            {/* Action Button */}
-            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition">
-              View Details
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              onClick={() => setCurrentPage(page)}
+              className={`px-3 py-2 rounded ${
+                currentPage === page
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-300 hover:bg-gray-400'
+              }`}
+            >
+              {page}
             </button>
-          </div>
+          ))}
+
+          <button
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="px-3 py-2 bg-gray-300 hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed rounded"
+          >
+            Next
+          </button>
         </div>
-      ))}
+      )}
     </div>
   )
 }

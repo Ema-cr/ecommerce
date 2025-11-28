@@ -20,7 +20,8 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   return (
     <>
       {!shouldHideLayout && <Navbar />}
-      <main>{children}</main>
+      {/* add top padding so fixed navbar doesn't overlap page content (only when navbar is shown) */}
+      <main className={!shouldHideLayout ? "pt-24" : ""}>{children}</main>
       {!shouldHideLayout && <Footer />}
     </>
   );
