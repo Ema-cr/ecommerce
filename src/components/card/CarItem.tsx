@@ -2,10 +2,66 @@
 
 import Image from 'next/image'
 import { Car } from '@/services/types'
-import { FaGasPump, FaCog, FaTachometerAlt, FaWrench } from 'react-icons/fa'
+import { FaGasPump, FaCog, FaTachometerAlt, FaWrench, FaStar } from 'react-icons/fa'
 import { MdElectricBolt } from 'react-icons/md'
+import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
+import { toast } from 'react-toastify'
 
 export default function CarItem({ car }: { car: Car }) {
+  const { data: session } = useSession()
+  const [isFavorite, setIsFavorite] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    // Check if car is in user's favorites (single check, not full list)
+    const checkFavorite = async () => {
+      if (!session?.user?.email) return
+      try {
+        const res = await fetch(`/api/users/favorites?carId=${car._id}`, { credentials: 'include' })
+        if (res.ok) {
+          const data = await res.json()
+          setIsFavorite(Boolean(data.isFavorite))
+        }
+      } catch {
+        // silent
+      }
+    }
+    checkFavorite()
+  }, [session?.user?.email, car._id])
+
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    
+    if (!session?.user?.email) {
+      toast.info('Por favor inicia sesión para usar favoritos')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const method = isFavorite ? 'DELETE' : 'POST'
+      const res = await fetch('/api/users/favorites', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ carId: car._id }),
+        credentials: 'include',
+      })
+
+      if (res.ok) {
+        setIsFavorite(!isFavorite)
+        toast.success(isFavorite ? 'Eliminado de favoritos' : 'Añadido a favoritos')
+      } else {
+        toast.error('No se pudo actualizar el favorito')
+      }
+    } catch (err) {
+      console.error(err)
+      toast.error('Error actualizando favorito')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer">
 
@@ -30,6 +86,17 @@ export default function CarItem({ car }: { car: Car }) {
             {car.status}
           </span>
         </div>
+
+        {/* Favorite Button */}
+        <button
+          onClick={handleToggleFavorite}
+          disabled={loading}
+          className="absolute top-3 left-3 p-2 rounded-full bg-white/80 hover:bg-white transition disabled:opacity-50"
+        >
+          <FaStar
+            className={`text-lg ${isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-gray-400'}`}
+          />
+        </button>
       </div>
 
       {/* Content */}

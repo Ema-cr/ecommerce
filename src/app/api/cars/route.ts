@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/dbConnect";
 import Cars from "@/app/database/models/Cars";
 import crypto from 'crypto';
+import { getToken } from 'next-auth/jwt';
 
 // In-memory cache for shuffled id lists per seed. Key = seed, Value = { ids, createdAt }
 const randomOrderCache = new Map<string, { ids: string[]; createdAt: number }>()
@@ -126,6 +127,23 @@ export async function getCars(page: number = 1, limit: number = 10, random: bool
 
 export async function POST(request: Request) {
   try {
+    // Check admin authorization
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
+    if (!token || !token.email) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    // Verify user is admin
+    const { default: clientPromise } = await import('@/lib/mongodb');
+    const client = await clientPromise;
+    const db = client.db();
+    const user = await db.collection('users').findOne({ email: token.email });
+    
+    if (!user || user.role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized: Admin only' }, { status: 403 });
+    }
+
     const body = await request.json();
     const newCar = await createCar(body);
     return NextResponse.json(newCar, { status: 201 });
@@ -146,5 +164,85 @@ export async function GET(request: Request) {
     return NextResponse.json(carsData);
   } catch (error) {
     return NextResponse.json({ message: "Error fetching cars", error }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    // Check admin authorization
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
+    if (!token || !token.email) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    // Verify user is admin
+    const { default: clientPromise } = await import('@/lib/mongodb');
+    const client = await clientPromise;
+    const db = client.db();
+    const user = await db.collection('users').findOne({ email: token.email });
+    
+    if (!user || user.role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized: Admin only' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const { carId, ...updateData } = body;
+
+    if (!carId) {
+      return NextResponse.json({ error: 'carId is required' }, { status: 400 });
+    }
+
+    await connectDB();
+    const updatedCar = await Cars.findByIdAndUpdate(carId, updateData, { new: true });
+
+    if (!updatedCar) {
+      return NextResponse.json({ error: 'Car not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, car: updatedCar });
+  } catch (error) {
+    console.error("❌ Error updating car:", error);
+    return NextResponse.json({ message: "Error updating car", error }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    // Check admin authorization
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const token = await getToken({ req: request as any, secret: process.env.NEXTAUTH_SECRET });
+    if (!token || !token.email) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    // Verify user is admin
+    const { default: clientPromise } = await import('@/lib/mongodb');
+    const client = await clientPromise;
+    const db = client.db();
+    const user = await db.collection('users').findOne({ email: token.email });
+    
+    if (!user || user.role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized: Admin only' }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const carId = searchParams.get("carId");
+
+    if (!carId) {
+      return NextResponse.json({ error: 'carId is required' }, { status: 400 });
+    }
+
+    await connectDB();
+    const deletedCar = await Cars.findByIdAndDelete(carId);
+
+    if (!deletedCar) {
+      return NextResponse.json({ error: 'Car not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Car deleted successfully' });
+  } catch (error) {
+    console.error("❌ Error deleting car:", error);
+    return NextResponse.json({ message: "Error deleting car", error }, { status: 500 });
   }
 }

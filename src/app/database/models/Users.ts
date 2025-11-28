@@ -10,6 +10,8 @@ const UserSchema = new Schema<IUser>(
     role: { type: String, enum: ["admin", "user"], default: "user" },
     cart: { type: [Schema.Types.Mixed], default: [] },
     image: { type: String, default: "" },
+    address: { type: String, default: "" },
+    favorites: { type: [Schema.Types.ObjectId], default: [] },
   },
   { timestamps: true }
 );

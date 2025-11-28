@@ -25,6 +25,10 @@ export async function POST(req: Request) {
       password: hashedPassword,
     });
 
+    // Set a default avatar for new users
+    // use a public asset so the client can load it at `/default-avatar.svg`
+    if (!newUser.image) newUser.image = '/default-avatar.svg'
+
     await newUser.save();
 
     return NextResponse.json(

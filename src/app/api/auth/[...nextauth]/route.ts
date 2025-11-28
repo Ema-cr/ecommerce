@@ -15,6 +15,7 @@ export const authOptions: AuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+      allowDangerousEmailAccountLinking: true,
     }),
 
     // 🟩 Login normal con correo/usuario + contraseña
@@ -69,6 +70,46 @@ export const authOptions: AuthOptions = {
 
   pages: {
     signIn: "/login",
+  },
+
+  callbacks: {
+    async signIn({ user, profile }) {
+      // capture Google profile picture and set default role on first OAuth login
+      if (profile) {
+        const client = await clientPromise
+        const db = client.db()
+        const existingUser = await db.collection('users').findOne({ email: user.email })
+        
+        // In Google OAuth, picture is in profile.picture, not profile.image
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const googleImage = (profile as any)?.picture || user.image || '/default-avatar.svg'
+        
+        if (!existingUser) {
+          // new user from OAuth: set image from profile and default role
+          await db.collection('users').updateOne(
+            { email: user.email },
+            {
+              $set: {
+                image: googleImage,
+                role: 'user',
+              },
+            },
+            { upsert: true }
+          )
+        } else if (!existingUser.image) {
+          // existing user without image: update with OAuth image
+          await db.collection('users').updateOne(
+            { email: user.email },
+            { $set: { image: googleImage, role: 'user' } }
+          )
+        }
+      }
+      return true
+    },
+    async redirect({ baseUrl }) {
+      // redirect to home after successful login instead of callback URL
+      return baseUrl
+    },
   },
 };
 
