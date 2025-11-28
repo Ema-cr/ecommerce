@@ -1,31 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { toast, ToastContainer } from "react-toastify";
 // Removed import of react-toastify CSS to prevent TypeScript error
 // import "react-toastify/dist/ReactToastify.css";
 
+const initialFormState = {
+  brand: "",
+  model: "",
+  year: "",
+  price: "",
+  currency: "USD",
+  engineType: "",
+  engineFuel: "",
+  engineHp: "",
+  engineTransmission: "",
+  km: "",
+  condition: "Used",
+  imageFile: null,
+  status: "Available",
+  tags: ""
+};
+
 export default function CreateCarPage() {
   const router = useRouter();
-
-  const initialFormState = {
-    brand: "",
-    model: "",
-    year: "",
-    price: "",
-    currency: "USD",
-    engineType: "",
-    engineFuel: "",
-    engineHp: "",
-    engineTransmission: "",
-    km: "",
-    condition: "Used",
-    imageFile: null,
-    status: "Available",
-    tags: ""
-  };
-
+  const { data: session, status } = useSession();
+  const [authorized, setAuthorized] = useState(false);
   const [form, setForm] = useState<{
     brand: string;
     model: string;
@@ -42,9 +44,41 @@ export default function CreateCarPage() {
     status: string;
     tags: string;
   }>(initialFormState);
-
   const [imageUrl, setImageUrl] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (status === "loading") return;
+    
+    const checkAdmin = async () => {
+      if (!session?.user?.email) {
+        toast.error("Debes iniciar sesión como administrador");
+        router.push("/login");
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/users/me", { credentials: "include" });
+        if (!res.ok) {
+          toast.error("No autorizado");
+          router.push("/");
+          return;
+        }
+        const data = await res.json();
+        if (data.user?.role !== "admin") {
+          toast.error("Solo administradores pueden crear vehículos");
+          router.push("/");
+          return;
+        }
+        setAuthorized(true);
+      } catch {
+        toast.error("Error verificando permisos");
+        router.push("/");
+      }
+    };
+
+    checkAdmin();
+  }, [session, status, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type, files } = e.target as HTMLInputElement;
@@ -122,6 +156,14 @@ export default function CreateCarPage() {
 
     setLoading(false);
   };
+
+  if (status === "loading" || !authorized) {
+    return (
+      <div className="max-w-3xl mx-auto p-6 pt-28">
+        <p>Verificando permisos...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-xl shadow-md">
@@ -260,16 +302,27 @@ export default function CreateCarPage() {
         </div>
 
         <div>
-          <label className="block font-medium">Image</label>
+          <label className="block font-medium mb-2">Image</label>
           <input
+            id="car-image-file"
             type="file"
             name="imageFile"
             accept="image/*"
             onChange={handleChange}
             required
-            className="w-full p-2 border rounded"
+            className="hidden"
           />
+          <label
+            htmlFor="car-image-file"
+            className="inline-block px-4 py-2 bg-gray-100 text-gray-800 rounded-lg cursor-pointer hover:bg-gray-200 border"
+          >
+            Select file
+          </label>
+          {form.imageFile && (
+            <span className="ml-3 text-sm text-gray-600">{form.imageFile.name}</span>
+          )}
           {imageUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
             <img src={imageUrl} alt="Uploaded" className="mt-2 max-h-48" />
           )}
         </div>

@@ -1,15 +1,50 @@
 "use client";
 import Link from "next/link";
 import { signIn, useSession, signOut } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from 'next/navigation'
 
 function Navbar() {
   const { data: session } = useSession();
+  const [userImage, setUserImage] = useState<string | null>(null)
+  const [userName, setUserName] = useState<string | null>(null)
+  const [userRole, setUserRole] = useState<string | null>(null)
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [query, setQuery] = useState('')
   const router = useRouter()
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!session?.user?.email) return
+      try {
+        const res = await fetch('/api/users/me', { credentials: 'include' })
+        if (!res.ok) return
+        const data = await res.json()
+        setUserImage(data.user?.image || null)
+        setUserName(data.user?.name || session.user.name || null)
+        setUserRole(data.user?.role || null)
+      } catch {
+        // ignore
+      }
+    }
+    fetchUser()
+  }, [session?.user?.email, session?.user?.name])
+
+  // close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false)
+      }
+    }
+
+    if (dropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [dropdownOpen])
 
   const doSearch = (q: string) => {
     const encoded = encodeURIComponent(q.trim())
@@ -20,7 +55,13 @@ function Navbar() {
     }
   }
 
+  const handleNavigate = (href: string) => {
+    router.push(href)
+    setDropdownOpen(false)
+  }
+
   return (
+    
     <nav
       className="fixed w-full top-0 z-50 border-b border-white/10 
       bg-linear-to-l from-[#0a1b3c] via-[#0e2a67] to-[#0d1f4a] backdrop-blur-xl"
@@ -29,6 +70,7 @@ function Navbar() {
 
         <div className="flex items-center space-x-3">
           <Link href="/">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/icon-gt.png"
               alt="GT AutoMarket"
@@ -58,54 +100,105 @@ function Navbar() {
         </div>
 
         <div className="flex items-center space-x-4">
+          <Link
+            href="/cars"
+            className="hidden md:block px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition"
+          >
+            Ver Vehiculos
+          </Link>
+          {userRole === 'admin' && (
+            <Link
+              href="/create"
+              className="hidden md:block px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl transition"
+            >
+              Crear Vehículo
+            </Link>
+          )}
           {session?.user ? (
-            <div className="flex items-center gap-3 relative">
-              <Link
-                href="/profile"
-                className="text-gray-200 hover:text-white"
-              >
-                Perfil
-              </Link>
-
+            <div className="flex items-center gap-3 relative" ref={dropdownRef}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={session.user.image ?? ""}
+                src={userImage || session.user.image || '/default-avatar.svg'}
                 alt="user"
-                className="w-9 h-9 rounded-full cursor-pointer border border-white/20"
+                className="w-12 h-12 rounded cursor-pointer border border-white/20 hover:border-white/40 transition object-cover"
                 onClick={() => setDropdownOpen(!dropdownOpen)}
               />
+              { (userName || session.user.name) && (
+                <span className="hidden md:inline text-white text-sm font-medium">
+                  {userName || session.user.name}
+                </span>
+              )}
 
               {dropdownOpen && (
                 <div
-                  className="absolute right-0 mt-12 w-48 
-                bg-[#0d1f4a]/90 border border-white/20 backdrop-blur-xl
-                rounded-lg shadow-xl p-3 text-white"
+                  className="absolute right-0 top-12 w-56 
+                bg-[#0d1f4a]/95 border border-white/20 backdrop-blur-xl
+                rounded-lg shadow-2xl p-0 text-white z-50"
                 >
-                  <div className="border-b border-white/10 pb-2 mb-2">
-                    <p className="font-medium">{session.user.name}</p>
-                    <p className="text-gray-300 text-xs truncate">
+                  {/* User info section */}
+                  <div className="border-b border-white/10 p-4">
+                    <p className="font-semibold text-base">{session.user.name}</p>
+                    <p className="text-gray-300 text-xs truncate mt-1">
                       {session.user.email}
                     </p>
                   </div>
+                  
 
-                  <button
-                    onClick={() => signOut({ callbackUrl: "/" })}
-                    className="w-full text-left px-3 py-2 rounded 
-                    hover:bg-white/10 text-gray-200"
-                  >
-                    Cerrar sesión
-                  </button>
+                  {/* Menu items */}
+                  <div className="py-2">
+                    <button
+                      onClick={() => handleNavigate('/profile')}
+                      className="w-full text-left px-4 py-3 hover:bg-white/10 transition flex items-center gap-3 text-gray-200 hover:text-white"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      Mi Perfil
+                    </button>
+
+                    <button
+                      onClick={() => handleNavigate('/cars')}
+                      className="w-full text-left px-4 py-3 hover:bg-white/10 transition flex items-center gap-3 text-gray-200 hover:text-white"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8m0 8l-6-4m6 4l6-4" />
+                      </svg>
+                      Ver Vehículos
+                    </button>
+
+                    <button
+                      onClick={() => handleNavigate('/dashboard')}
+                      className="w-full text-left px-4 py-3 hover:bg-white/10 transition flex items-center gap-3 text-gray-200 hover:text-white"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                      Panel
+                    </button>
+
+                    <div className="border-t border-white/10 my-2"></div>
+
+                    <button
+                      onClick={() => signOut({ callbackUrl: "/" })}
+                      className="w-full text-left px-4 py-3 hover:bg-red-500/20 transition flex items-center gap-3 text-red-300 hover:text-red-200"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      Cerrar sesión
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
           ) : (
             <Link
               href="/login"
-              className="px-4 py-2 bg-blue-500 hover:bg-blue-600  text-white rounded-xl  transition"
+              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition"
             >
               Iniciar sesión
             </Link>
           )}
-
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="md:hidden text-gray-200 hover:text-white"
@@ -140,14 +233,11 @@ function Navbar() {
           <Link href="/" className="block text-gray-200 hover:text-white">
             Home
           </Link>
-          <Link href="/about" className="block text-gray-200 hover:text-white">
-            About
+          <Link href="/cars" className="block text-gray-200 hover:text-white">
+            Vehículos
           </Link>
-          <Link
-            href="/services"
-            className="block text-gray-200 hover:text-white"
-          >
-            Servicios
+          <Link href="/dashboard" className="block text-gray-200 hover:text-white">
+            Panel
           </Link>
 
           {!session?.user && (

@@ -28,4 +28,6 @@ export interface IUser extends Document {
   role?: 'admin' | 'user';
   cart?: string[];
   image?: string;
+  address?: string;
+  favorites?: string[];
 }
