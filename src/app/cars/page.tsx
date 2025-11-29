@@ -1,14 +1,16 @@
 "use client"
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { Suspense, useEffect, useMemo, useState } from 'react'
 import { Car } from '@/services/types'
 import CarItem from '@/components/card/CarItem'
 import { MdSearch } from 'react-icons/md'
 import { useSession } from 'next-auth/react'
 import CarsModal from '@/components/carsmodal/CarsModal'
 import DetailsModal from '@/components/detailsmodal/DetailsModal'
-import { useSearchParams } from 'next/navigation'
+// Avoid Next.js suspense requirement by reading search params via window
 import { useI18n } from '@/app/i18n/I18nProvider'
+
+export const dynamic = 'force-dynamic'
 
 export default function CarsPage() {
   const [cars, setCars] = useState<Car[]>([])
@@ -21,7 +23,7 @@ export default function CarsPage() {
   const [selectedCar, setSelectedCar] = useState<Car | null>(null)
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [detailsCar, setDetailsCar] = useState<Car | null>(null)
-  const searchParams = useSearchParams()
+  const [queryParams, setQueryParams] = useState<URLSearchParams | null>(null)
   const { t } = useI18n()
 
   // Filters
@@ -35,6 +37,13 @@ export default function CarsPage() {
   const [yearMax, setYearMax] = useState<number | ''>('')
 
   useEffect(() => {
+    // Initialize query params on client
+    if (typeof window !== 'undefined') {
+      setQueryParams(new URLSearchParams(window.location.search))
+    }
+  }, [])
+
+  useEffect(() => {
     const fetchAll = async () => {
       try {
         setLoading(true)
@@ -42,7 +51,7 @@ export default function CarsPage() {
         if (!res.ok) throw new Error('Failed to fetch cars')
         const data = await res.json()
         setCars(data.items || [])
-        const q = searchParams.get('q')
+        const q = queryParams?.get('q')
         if (q) setBrandFilter(q)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error')
@@ -51,7 +60,7 @@ export default function CarsPage() {
       }
     }
     fetchAll()
-  }, [searchParams])
+  }, [queryParams])
 
   // Fetch favorites once for the logged-in user
   useEffect(() => {
@@ -120,14 +129,14 @@ export default function CarsPage() {
 
   // Open details modal if URL has ?modal=<carId>
   useEffect(() => {
-    const modalId = searchParams.get('modal')
+    const modalId = queryParams?.get('modal')
     if (!modalId || cars.length === 0) return
     const found = cars.find(c => c._id === modalId)
     if (found) {
       setDetailsCar(found)
       setDetailsOpen(true)
     }
-  }, [searchParams, cars])
+  }, [queryParams, cars])
 
   const clearFilters = () => {
     setBrandFilter('')
@@ -164,6 +173,7 @@ export default function CarsPage() {
   if (error) return <div className="p-8 text-red-500">Error: {error}</div>
 
   return (
+    <Suspense fallback={<div className="p-8">Loading cars...</div>}>
     <div className="flex gap-6 p-6">
       {/* Sidebar filters */}
       <aside className="w-72 bg-white rounded-lg shadow p-4 sticky top-32 h-[calc(100vh-48px)] overflow-auto">
@@ -250,5 +260,6 @@ export default function CarsPage() {
         car={detailsCar}
       />
     </div>
+    </Suspense>
   )
 }
