@@ -1,0 +1,14 @@
+{
+  "testUser": {
+    "email": "test@example.com",
+    "password": "Test123456",
+    "fullName": "Test User",
+    "phone": "+1 234 567 8900"
+  },
+  "adminUser": {
+    "email": "admin@gtautomarket.com",
+    "password": "Admin123456",
+    "fullName": "Admin User",
+    "role": "admin"
+  }
+}

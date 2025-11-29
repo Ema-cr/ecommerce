@@ -1,0 +1,35 @@
+[
+  {
+    "id": "1",
+    "brand": "Toyota",
+    "model": "Corolla",
+    "year": 2023,
+    "price": 25000,
+    "condition": "new",
+    "status": "available",
+    "images": ["https://example.com/car1.jpg"],
+    "tags": ["sedan", "automatic"]
+  },
+  {
+    "id": "2",
+    "brand": "Honda",
+    "model": "Civic",
+    "year": 2022,
+    "price": 23000,
+    "condition": "used",
+    "status": "sold",
+    "images": ["https://example.com/car2.jpg"],
+    "tags": ["sedan", "manual"]
+  },
+  {
+    "id": "3",
+    "brand": "Ford",
+    "model": "F-150",
+    "year": 2024,
+    "price": 45000,
+    "condition": "new",
+    "status": "available",
+    "images": ["https://example.com/car3.jpg"],
+    "tags": ["truck", "4x4"]
+  }
+]

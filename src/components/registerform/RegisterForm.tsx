@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
+import { useI18n } from '@/app/i18n/I18nProvider';
 import {
   UserIcon,
   EnvelopeIcon,
@@ -12,6 +13,8 @@ import {
 } from "@heroicons/react/24/outline";
 
 export default function RegisterForm() {
+  const router = useRouter();
+  const { t } = useI18n();
   const [form, setForm] = useState({
     nombre: "",
     email: "",
@@ -33,7 +36,7 @@ export default function RegisterForm() {
     e.preventDefault();
 
     if (form.password !== form.confirm) {
-      toast.error("Las contraseñas no coinciden");
+      toast.error(t('registerForm.passwordMismatch'));
       return;
     }
 
@@ -47,12 +50,14 @@ export default function RegisterForm() {
 
       if (res.status === 201) {
         await axios.post("/api/sendEmail", { email: form.email });
-        toast.success("Usuario registrado y correo enviado");
+        toast.success(t('registerForm.success'));
+        // Redirect to login after successful registration
+        setTimeout(() => router.push('/login'), 1200);
       } else {
-        toast.error("Error al registrar usuario");
+        toast.error(t('registerForm.error'));
       }
-    } catch (error) {
-      toast.error("Error al registrar usuario");
+    } catch {
+      toast.error(t('registerForm.error'));
     }
   };
 
@@ -63,22 +68,22 @@ export default function RegisterForm() {
         className="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-xl space-y-6"
       >
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Crear Cuenta</h2>
+          <h2 className="text-2xl font-bold text-gray-900">{t('registerForm.title')}</h2>
           <p className="text-gray-500">
-            Completa el formulario para comenzar tu experiencia en nuestro concesionario
+            {t('registerForm.subtitle')}
           </p>
         </div>
 
         {/* Nombre */}
         <div>
-          <label className="font-medium text-gray-700">Nombre Completo</label>
+          <label className="font-medium text-gray-700">{t('registerForm.fullName')}</label>
           <div className="relative mt-1">
             <UserIcon className="w-5 h-5 absolute left-3 top-3 text-gray-400" />
             <input
               type="text"
               name="nombre"
               required
-              placeholder="Juan Pérez"
+              placeholder={t('registerForm.fullNamePlaceholder')}
               value={form.nombre}
               onChange={handleChange}
               className="w-full pl-10 border-none rounded-xl p-2 bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500"
@@ -88,14 +93,14 @@ export default function RegisterForm() {
 
         {/* Correo */}
         <div>
-          <label className="font-medium text-gray-700">Correo Electrónico</label>
+          <label className="font-medium text-gray-700">{t('registerForm.email')}</label>
           <div className="relative mt-1">
             <EnvelopeIcon className="w-5 h-5 absolute left-3 top-3 text-gray-400" />
             <input
               type="email"
               name="email"
               required
-              placeholder="tu@email.com"
+              placeholder={t('registerForm.emailPlaceholder')}
               value={form.email}
               onChange={handleChange}
               className="w-full pl-10 border-none rounded-xl p-2 bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500"
@@ -105,13 +110,13 @@ export default function RegisterForm() {
 
         {/* Teléfono */}
         <div>
-          <label className="font-medium text-gray-700">Teléfono</label>
+          <label className="font-medium text-gray-700">{t('registerForm.phone')}</label>
           <div className="relative mt-1">
             <PhoneIcon className="w-5 h-5 absolute left-3 top-3 text-gray-400" />
             <input
               type="text"
               name="telefono"
-              placeholder="+57 123 456 7890"
+              placeholder={t('registerForm.phonePlaceholder')}
               value={form.telefono}
               onChange={handleChange}
               className="w-full pl-10 border-none rounded-xl p-2 bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500"
@@ -122,7 +127,7 @@ export default function RegisterForm() {
         {/* Contraseña */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="font-medium text-gray-700">Contraseña</label>
+            <label className="font-medium text-gray-700">{t('registerForm.password')}</label>
             <div className="relative mt-1">
               <LockClosedIcon className="w-5 h-5 absolute left-3 top-3 text-gray-400" />
               <input
@@ -130,7 +135,7 @@ export default function RegisterForm() {
                 name="password"
                 required
                 minLength={6}
-                placeholder="Mínimo 6 caracteres"
+                placeholder={t('registerForm.passwordPlaceholder')}
                 value={form.password}
                 onChange={handleChange}
                 className="w-full pl-10 border-none rounded-xl p-2 bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500"
@@ -139,14 +144,14 @@ export default function RegisterForm() {
           </div>
 
           <div>
-            <label className="font-medium text-gray-700">Confirmar</label>
+            <label className="font-medium text-gray-700">{t('registerForm.confirm')}</label>
             <div className="relative mt-1">
               <LockClosedIcon className="w-5 h-5 absolute left-3 top-3 text-gray-400" />
               <input
                 type="password"
                 name="confirm"
                 required
-                placeholder="Repite contraseña"
+                placeholder={t('registerForm.confirmPlaceholder')}
                 value={form.confirm}
                 onChange={handleChange}
                 className="w-full pl-10 border-none rounded-xl p-2 bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500"
@@ -165,8 +170,8 @@ export default function RegisterForm() {
             required
           />
           <span className="text-sm">
-            Acepto los <span className="text-blue-600">términos y condiciones</span> y la{" "}
-            <span className="text-blue-600">política de privacidad</span>
+            {t('registerForm.terms')} <span className="text-blue-600">{t('registerForm.termsLink')}</span> {t('registerForm.and')}{" "}
+            <span className="text-blue-600">{t('registerForm.privacyLink')}</span>
           </span>
         </label>
 
@@ -175,11 +180,11 @@ export default function RegisterForm() {
           type="submit"
           className="w-full bg-black text-white py-3 rounded-xl font-semibold hover:bg-gray-900 transition"
         >
-          Crear Cuenta
+          {t('registerForm.submit')}
         </button>
         {/* Ir a login */}
         <p className="text-center text-gray-600 text-sm mt-3">
-          ¿Ya tienes cuenta? <a className="text-blue-600" href="/login">Inicia sesión aquí</a>
+          {t('registerForm.hasAccount')} <a className="text-blue-600" href="/login">{t('registerForm.loginLink')}</a>
         </p>
       </form>
       <ToastContainer />

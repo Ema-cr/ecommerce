@@ -1,0 +1,20 @@
+# Cypress gitignore
+
+# Videos de pruebas (pueden ser grandes)
+cypress/videos/
+
+# Screenshots solo de pruebas fallidas (opcional - puedes commitearlos)
+cypress/screenshots/
+
+# Archivos de Cypress generados
+cypress/downloads/
+
+# Cache de Cypress
+.cypress-cache/
+
+# Resultados de pruebas
+cypress/results/
+mochawesome-report/
+
+# Variables de entorno locales
+cypress.env.json

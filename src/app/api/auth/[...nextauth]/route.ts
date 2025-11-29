@@ -106,6 +106,28 @@ export const authOptions: AuthOptions = {
       }
       return true
     },
+    async jwt({ token, user, account, profile }) {
+      // Ensure a default avatar image is present in the JWT token
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const googleImage = (profile as any)?.picture || user?.image
+      const defaultAvatar = 'https://www.gravatar.com/avatar/?d=mp&f=y'
+      if (!token.picture && !googleImage) {
+        token.picture = defaultAvatar
+      } else if (googleImage) {
+        token.picture = googleImage
+      }
+      return token
+    },
+    async session({ session, token }) {
+      // Propagate image to session with a safe default
+      const defaultAvatar = 'https://www.gravatar.com/avatar/?d=mp&f=y'
+      if (session.user) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const pic = (token as any)?.picture
+        session.user.image = pic || session.user.image || defaultAvatar
+      }
+      return session
+    },
     async redirect({ baseUrl }) {
       // redirect to home after successful login instead of callback URL
       return baseUrl
