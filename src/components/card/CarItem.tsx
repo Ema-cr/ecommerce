@@ -7,34 +7,31 @@ import { MdElectricBolt } from 'react-icons/md'
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { toast } from 'react-toastify'
+import { useI18n } from '@/app/i18n/I18nProvider'
 
-export default function CarItem({ car }: { car: Car }) {
+export default function CarItem({ car, favoriteIds = [], role, onEdit, onViewDetails }: { car: Car, favoriteIds?: string[], role?: string | null, onEdit?: (car: Car) => void, onViewDetails?: (car: Car) => void }) {
   const { data: session } = useSession()
   const [isFavorite, setIsFavorite] = useState(false)
   const [loading, setLoading] = useState(false)
+  const { t } = useI18n()
+  // role not needed in card (admin controls removed)
+
+  // Modal removed from card; handled in parent page
 
   useEffect(() => {
-    // Check if car is in user's favorites (single check, not full list)
-    const checkFavorite = async () => {
-      if (!session?.user?.email) return
-      try {
-        const res = await fetch(`/api/users/favorites?carId=${car._id}`, { credentials: 'include' })
-        if (res.ok) {
-          const data = await res.json()
-          setIsFavorite(Boolean(data.isFavorite))
-        }
-      } catch {
-        // silent
-      }
+    if (!session?.user?.email) {
+      setIsFavorite(false)
+      return
     }
-    checkFavorite()
-  }, [session?.user?.email, car._id])
+    const isFav = favoriteIds.some((id) => id === car._id)
+    setIsFavorite(isFav)
+  }, [session?.user?.email, car._id, favoriteIds])
 
   const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation()
     
     if (!session?.user?.email) {
-      toast.info('Por favor inicia sesión para usar favoritos')
+      toast.info(t('carItem.loginForFavorites'))
       return
     }
 
@@ -50,20 +47,20 @@ export default function CarItem({ car }: { car: Car }) {
 
       if (res.ok) {
         setIsFavorite(!isFavorite)
-        toast.success(isFavorite ? 'Eliminado de favoritos' : 'Añadido a favoritos')
+        toast.success(isFavorite ? t('cars.card.favoriteRemoved') : t('cars.card.favoriteAdded'))
       } else {
-        toast.error('No se pudo actualizar el favorito')
+        toast.error(t('carItem.favoriteUpdateError'))
       }
     } catch (err) {
       console.error(err)
-      toast.error('Error actualizando favorito')
+      toast.error(t('carItem.favoriteError'))
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer">
+    <div className="group bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer">
 
       <div className="relative w-full h-64 bg-gray-200">
         <Image
@@ -72,6 +69,16 @@ export default function CarItem({ car }: { car: Car }) {
           fill
           className="object-cover"
         />
+        {/* Hover Overlay: Schedule Visit */}
+        <a
+          href="/visit"
+          className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/25 transition-colors duration-300"
+          aria-label="Schedule a visit at the dealership"
+        >
+          <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-blue-600 font-semibold bg-white/70 backdrop-blur-sm px-4 py-2 rounded-full">
+            {t('carItem.scheduleVisit')}
+          </span>
+        </a>
         {/* Status Badge */}
         <div className="absolute top-3 right-3">
           <span
@@ -151,11 +158,22 @@ export default function CarItem({ car }: { car: Car }) {
           </p>
         </div>
 
-        {/* Action Button */}
-        <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition">
-          View Details
-        </button>
+        {/* Actions */}
+        <div className="flex gap-2">
+          <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition" onClick={() => onViewDetails && onViewDetails(car)}>
+            {t('carItem.details')}
+          </button>
+          {role === 'admin' && (
+            <button
+              className="px-4 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg transition"
+              onClick={() => onEdit && onEdit(car)}
+            >
+              {t('carItem.edit')}
+            </button>
+          )}
+        </div>
       </div>
+      
     </div>
   )
 }

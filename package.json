@@ -9,17 +9,26 @@
     "lint": "eslint",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:cov": "jest --coverage"
+    "test:cov": "jest --coverage",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "cypress:run:chrome": "cypress run --browser chrome",
+    "cypress:run:firefox": "cypress run --browser firefox",
+    "e2e": "start-server-and-test dev http://localhost:3000 cypress:open",
+    "e2e:headless": "start-server-and-test dev http://localhost:3000 cypress:run"
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.11.1",
     "@heroicons/react": "^2.2.0",
+    "@heroui/modal": "^2.2.24",
+    "@heroui/react": "^2.8.5",
     "@hookform/resolvers": "^5.2.2",
     "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.8.0",
     "dotenv": "^17.2.3",
+    "i18n": "^0.15.3",
     "mongoose": "^8.20.1",
     "next-auth": "^4.24.13",
     "next-cloudinary": "^6.17.4",
@@ -33,6 +42,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@testing-library/cypress": "^10.1.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
@@ -45,6 +55,7 @@
     "@types/nodemailer": "^7.0.3",
     "@types/react": "^19.2.4",
     "@types/react-dom": "^19",
+    "cypress": "^15.7.0",
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
     "jest": "^30.2.0",
@@ -52,6 +63,7 @@
     "next": "^16.0.3",
     "tailwindcss": "^4",
     "ts-jest": "^29.4.5",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }
 }

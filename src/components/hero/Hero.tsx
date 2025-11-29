@@ -2,8 +2,14 @@
 
 import Link from 'next/link'
 import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { useI18n } from '@/app/i18n/I18nProvider'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 
 function Hero() {
+  const { t } = useI18n()
+  const { data: session } = useSession()
+  const router = useRouter()
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
   // Array of image URLs - you can replace these with your own images
@@ -90,15 +96,22 @@ function Hero() {
 
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center justify-center h-full text-center text-white px-4">
-        <h1 className="text-5xl md:text-6xl font-bold mb-4">Bienvenido a GT Auto Market</h1>
+        <h1 className="text-5xl md:text-6xl font-bold mb-4">{t('hero.title')}</h1>
         <p className="text-xl md:text-2xl mb-8 max-w-2xl">
-          Explora autos increíbles y exclusivos 
+          {t('hero.subtitle')}
         </p>
-      <Link href="/register">
-        <button className="bg-blue-500 hover:bg-blue-600 px-8 py-3 rounded-lg text-lg font-semibold transition">
-          Comprar Ahora
-        </button>
-      </Link>
+      <button
+        onClick={() => {
+          if (session?.user?.email) {
+            router.push('/cars')
+          } else {
+            router.push('/register')
+          }
+        }}
+        className="bg-blue-500 hover:bg-blue-600 px-8 py-3 rounded-lg text-lg font-semibold transition"
+      >
+        {t('hero.buyNow')}
+      </button>
       </div>
 
       {/* Navigation Buttons */}

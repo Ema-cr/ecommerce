@@ -4,12 +4,14 @@ import { signIn } from "next-auth/react";
 import { EnvelopeIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import { toast } from 'react-toastify'
 import { useRouter } from 'next/navigation'
+import { useI18n } from '@/app/i18n/I18nProvider'
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
   const router = useRouter()
+  const { t } = useI18n()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,19 +25,19 @@ export default function LoginForm() {
 
       // res may be undefined in some cases
       if (!res) {
-        toast.error('Error en la autenticación')
+        toast.error(t('loginForm.authError'))
         return
       }
 
       if (res.error) {
         toast.error(res.error)
       } else {
-        toast.success('Autenticado correctamente')
+        toast.success(t('loginForm.success'))
         // redirect to home
         router.push('/')
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Error inesperado')
+      toast.error(err instanceof Error ? err.message : t('loginForm.unexpectedError'))
     }
   };
 
@@ -45,20 +47,20 @@ export default function LoginForm() {
       className="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-xl space-y-6"
     >
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Iniciar Sesión</h2>
+        <h2 className="text-2xl font-bold text-gray-900">{t('loginForm.title')}</h2>
         <p className="text-gray-500">
-          Accede a tu cuenta para explorar nuestro catálogo de vehículos nuevos
+          {t('loginForm.subtitle')}
         </p>
       </div>
 
       <div>
-        <label className="font-medium text-gray-700">Correo Electrónico</label>
+        <label className="font-medium text-gray-700">{t('loginForm.email')}</label>
         <div className="relative mt-1">
           <EnvelopeIcon className="w-5 h-5 absolute left-3 top-3 text-gray-400" />
           <input
             type="email"
             name="email"
-            placeholder="tu@email.com"
+            placeholder={t('loginForm.emailPlaceholder')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full pl-10 border-none rounded-xl p-2 bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500"
@@ -68,13 +70,13 @@ export default function LoginForm() {
       </div>
 
       <div>
-        <label className="font-medium text-gray-700">Contraseña</label>
+        <label className="font-medium text-gray-700">{t('loginForm.password')}</label>
         <div className="relative mt-1">
           <LockClosedIcon className="w-5 h-5 absolute left-3 top-3 text-gray-400" />
           <input
             type="password"
             name="password"
-            placeholder="••••••••"
+            placeholder={t('loginForm.passwordPlaceholder')}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full pl-10 border-none rounded-xl p-2 bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500"
@@ -90,19 +92,19 @@ export default function LoginForm() {
           onChange={(e) => setRemember(e.target.checked)}
           className="h-4 w-4"
         />
-        <span className="text-sm">Recordarme</span>
+        <span className="text-sm">{t('loginForm.remember')}</span>
       </label>
 
       <button
         type="submit"
         className="w-full bg-black text-white py-3 rounded-xl font-semibold hover:bg-gray-900 transition"
       >
-        Iniciar Sesión
+        {t('loginForm.submit')}
       </button>
 
       <div className="flex items-center gap-4">
         <hr className="grow" />
-        <span className="text-gray-400 text-sm">O continuar con</span>
+        <span className="text-gray-400 text-sm">{t('loginForm.or')}</span>
         <hr className="grow" />
       </div>
 
@@ -116,9 +118,9 @@ export default function LoginForm() {
       </button>
 
       <p className="text-center text-gray-600 text-sm">
-        ¿No tienes cuenta?{" "}
+        {t('loginForm.noAccount')}{" "}
         <a href="/register" className="text-blue-600">
-          Regístrate aquí
+          {t('loginForm.registerLink')}
         </a>
       </p>
     </form>

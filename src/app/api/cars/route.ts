@@ -160,6 +160,41 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get("limit") || "100");
     const random = searchParams.get("random") === "true";
     const seed = searchParams.get("seed") || undefined;
+    const q = searchParams.get('q')?.trim();
+
+    // If query provided, perform filtered search by brand/model/year/engine/fuel/tags
+    if (q) {
+      await connectDB();
+      const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      const results = await Cars.find({
+        $or: [
+          { brand: regex },
+          { model: regex },
+          { condition: regex },
+          { status: regex },
+          { currency: regex },
+          { tags: { $in: [regex] } },
+          { 'engine.type': regex },
+          { 'engine.fuel': regex },
+          { 'engine.transmission': regex },
+        ]
+      })
+      .limit(limit)
+      .lean();
+
+      // Also allow numeric year or price searches
+      const yearNum = Number(q);
+      if (!isNaN(yearNum)) {
+        const yearMatches = await Cars.find({ year: yearNum }).limit(limit).lean();
+        // merge unique by _id
+        const map = new Map<string, any>();
+        [...results, ...yearMatches].forEach((d: any) => map.set(String(d._id), d));
+        return NextResponse.json({ items: Array.from(map.values()), total: map.size, page: 1, limit });
+      }
+
+      return NextResponse.json({ items: results, total: results.length, page: 1, limit });
+    }
+
     const carsData = await getCars(page, limit, random, seed);
     return NextResponse.json(carsData);
   } catch (error) {
