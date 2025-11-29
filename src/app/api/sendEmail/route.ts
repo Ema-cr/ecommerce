@@ -31,9 +31,10 @@ export async function POST(req: Request) {
       to: emailTrim,
       subject: "🚗 Bienvenido a GT Auto Market",
       html: mensajeHtml,
-      attachments: [
-        { filename: 'icon-gt.png', path: `${process.cwd()}/public/icon-gt.png`, cid: 'icon-gt' }
-      ],
+      // Remove file attachment to avoid serverless file system issues
+      // attachments: [
+      //   { filename: 'icon-gt.png', path: `${process.cwd()}/public/icon-gt.png`, cid: 'icon-gt' }
+      // ],
     });
     return NextResponse.json({ ok: true, message: "Correo enviado exitosamente" });
   } catch (error: any) {

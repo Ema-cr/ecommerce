@@ -49,7 +49,10 @@ export default function RegisterForm() {
       });
 
       if (res.status === 201) {
-        await axios.post("/api/sendEmail", { email: form.email });
+        // Send welcome email (non-blocking)
+        axios.post("/api/sendEmail", { email: form.email }).catch((err) => {
+          console.warn('[RegisterForm] Failed to send welcome email:', err.message);
+        });
         toast.success(t('registerForm.success'));
         // Redirect to login after successful registration
         setTimeout(() => router.push('/login'), 1200);
