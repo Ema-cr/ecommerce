@@ -4,6 +4,9 @@ import Cars from "@/app/database/models/Cars";
 import crypto from 'crypto';
 import { getToken } from 'next-auth/jwt';
 
+// Run on Node to avoid potential edge limitations with crypto & mongoose
+export const runtime = 'nodejs'
+
 // In-memory cache for shuffled id lists per seed. Key = seed, Value = { ids, createdAt }
 const randomOrderCache = new Map<string, { ids: string[]; createdAt: number }>()
 // TTL for cache entries (ms)
@@ -46,25 +49,38 @@ function shuffleWithSeed<T>(arr: T[], seed: string) {
 }
 // no extra mongoose types needed
 
+function validateCarPayload(data: Record<string, unknown>) {
+  const errors: string[] = []
+  const requiredString = ['brand','model','imageUrl']
+  requiredString.forEach(f => {
+    const v = data[f]
+    if (!v || typeof v !== 'string' || v.trim().length === 0) errors.push(`${f} requerido`)
+  })
+  const year = data.year
+  if (year === undefined || isNaN(Number(year))) errors.push('year inválido')
+  const price = data.price
+  if (price === undefined || isNaN(Number(price))) errors.push('price inválido')
+  const engine = data.engine as Record<string, unknown> | undefined
+  if (!engine) errors.push('engine requerido')
+  else {
+    ['type','fuel','hp','transmission'].forEach(k => {
+      const val = engine[k]
+      if (val === undefined || (typeof val === 'string' && val.trim() === '') || (k==='hp' && isNaN(Number(val)))) errors.push(`engine.${k} inválido`)
+    })
+  }
+  return errors
+}
+
 export async function createCar(data: Record<string, unknown>) {
   await connectDB();
-
+  const errs = validateCarPayload(data)
+  if (errs.length) {
+    return { error: true, messages: errs }
+  }
   const {
-    brand,
-    model,
-    year,
-    price,
-    currency,
-    engine,
-    km,
-    condition,
-    imageUrl,
-    status,
-    tags,
+    brand, model, year, price, currency, engine, km, condition, imageUrl, status, tags,
   } = data;
-
   const kmNumber = km !== undefined && km !== null ? parseInt(String(km)) : 0
-
   const newCar = new Cars({
     brand,
     model,
@@ -78,7 +94,6 @@ export async function createCar(data: Record<string, unknown>) {
     status,
     tags,
   });
-
   await newCar.save();
   return newCar;
 }
@@ -146,10 +161,13 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const newCar = await createCar(body);
+    if ((newCar as any)?.error) {
+      return NextResponse.json({ ok: false, errors: (newCar as any).messages }, { status: 422 })
+    }
     return NextResponse.json(newCar, { status: 201 });
   } catch (error) {
     console.error("❌ Error creating car:", error);
-    return NextResponse.json({ message: "Error creating car", error }, { status: 500 });
+    return NextResponse.json({ ok: false, message: "Error creating car" }, { status: 500 });
   }
 }
 
@@ -198,7 +216,7 @@ export async function GET(request: Request) {
     const carsData = await getCars(page, limit, random, seed);
     return NextResponse.json(carsData);
   } catch (error) {
-    return NextResponse.json({ message: "Error fetching cars", error }, { status: 500 });
+    return NextResponse.json({ ok: false, message: "Error fetching cars" }, { status: 500 });
   }
 }
 
@@ -236,9 +254,12 @@ export async function PATCH(request: Request) {
     }
 
     return NextResponse.json({ success: true, car: updatedCar });
-  } catch (error) {
+  } catch (error: any) {
     console.error("❌ Error updating car:", error);
-    return NextResponse.json({ message: "Error updating car", error }, { status: 500 });
+    if (error?.code === 11000) {
+      return NextResponse.json({ ok: false, message: 'Duplicate key' }, { status: 409 })
+    }
+    return NextResponse.json({ ok: false, message: "Error updating car" }, { status: 500 });
   }
 }
 
@@ -278,6 +299,6 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true, message: 'Car deleted successfully' });
   } catch (error) {
     console.error("❌ Error deleting car:", error);
-    return NextResponse.json({ message: "Error deleting car", error }, { status: 500 });
+    return NextResponse.json({ ok: false, message: "Error deleting car" }, { status: 500 });
   }
 }

@@ -56,6 +56,9 @@ export async function PATCH(req: Request) {
       if (!password) {
         return NextResponse.json({ error: 'Current password required to change password' }, { status: 400 })
       }
+      if (newPassword.length < 6) {
+        return NextResponse.json({ error: 'New password too short (min 6)' }, { status: 422 })
+      }
 
       const currentUser = await db.collection('users').findOne({ email: token.email })
       if (!currentUser) {
@@ -72,7 +75,16 @@ export async function PATCH(req: Request) {
     const updateData: any = {}
     if (image) updateData.image = image
     if (name) updateData.name = name
-    if (email) updateData.email = email
+    if (email) {
+      // prevent changing to an email already used by another user (only check if different from current)
+      if (email !== token.email) {
+        const existingWithEmail = await db.collection('users').findOne({ email })
+        if (existingWithEmail) {
+          return NextResponse.json({ error: 'Email ya está en uso' }, { status: 409 })
+        }
+      }
+      updateData.email = email
+    }
     if (address !== undefined) updateData.address = address
     if (newPassword) updateData.password = await hash(newPassword, 10)
 
@@ -92,8 +104,11 @@ export async function PATCH(req: Request) {
     const imageFinal = safe.image && String(safe.image).length > 0 ? safe.image : '/default-avatar.svg'
 
     return NextResponse.json({ user: { ...safe, _id: safe._id.toString(), image: imageFinal } })
-  } catch (error) {
-    console.error('Error updating user:', error)
+  } catch (error: any) {
+    console.error('Error updating user:', { message: error?.message, code: error?.code })
+    if (error?.code === 11000) {
+      return NextResponse.json({ error: 'Duplicate key' }, { status: 409 })
+    }
     return NextResponse.json({ error: 'Update failed' }, { status: 500 })
   }
 }
